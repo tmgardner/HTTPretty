@@ -839,7 +839,17 @@ class httpretty(HttpBaseClass):
         def record_request(request, uri, headers):
             cls.disable()
 
-            response = http.request(request.method, uri)
+            response = http.request(
+                request.method,
+                uri,
+                # TODO: This will have problems if a header has multiple values.
+                # Note you can't blindly concat multiple headers with "; ", as
+                # it can cause issues with some headers like Cookie). However,
+                # the urllib3 thing we are calling calls iteritems() on this,
+                # and rfc822.Message does not implement iteritems(), just
+                # items(). Fix this here and below in the logged calls.
+                headers=dict(request.headers),
+                body=request.body)
             calls.append({
                 'request': {
                     'uri': uri,
